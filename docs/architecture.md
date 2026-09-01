@@ -1,13 +1,36 @@
 # System Architecture
 
-1. Acquire or simulate motion sensor data.
-2. Apply basic signal handling.
-3. Compare motion values against configurable thresholds.
-4. Require multiple abnormal samples for event confirmation.
-5. Obtain GPS location when an event is confirmed.
-6. Create an emergency-alert message.
-7. Log and analyze the event.
+The project follows a modular architecture that separates accident
+detection from GPS handling and alert generation.
 
-The accident detector is independent from GPS and alert transport, making the decision logic testable without physical communication hardware.
+## Processing Flow
 
-Future extensions include an IMU interface, GPS serial interface, GSM/LTE modem interface, sensor calibration, filtering, sensor fusion, and hardware-in-the-loop testing.
+1. Load or generate vehicle sensor data.
+2. Read acceleration and gyroscope measurements.
+3. Compare sensor values with configurable thresholds.
+4. Require multiple consecutive abnormal samples to confirm an event.
+5. Track the peak sensor values and duration of the abnormal event.
+6. Obtain the GPS location when an event is confirmed.
+7. Generate an emergency-alert message.
+8. Analyze the sensor data using Python visualization tools.
+
+## Main Modules
+
+- `src/detection/` — Accident detection and event classification
+- `src/gps/` — GPS location handling
+- `src/alerts/` — Alert-message generation
+- `src/data/` — Sensor-data loading utilities
+- `simulator/` — Synthetic vehicle-sensor scenarios
+- `analysis/` — Sensor-data visualization
+- `tests/` — Automated software tests
+- `firmware/arduino/` — Arduino reference implementation
+
+The accident detector is independent from GPS and alert generation,
+which allows the detection logic to be tested without physical
+communication hardware.
+
+## Scope
+
+The implementation is intended for academic and portfolio
+demonstration. The simulated sensor data and detection thresholds
+should not be interpreted as real-world crash-detection performance.
