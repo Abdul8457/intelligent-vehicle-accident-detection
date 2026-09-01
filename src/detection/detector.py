@@ -58,127 +58,133 @@ class AccidentDetector:
     ) -> None:
         self.config = config or DetectionConfig()
 
-def process_dataframe(
-    self,
-    df: pd.DataFrame,
-) -> List[AccidentEvent]:
-    """
-    Process sensor data and return confirmed accident events.
-    """
+    def process_dataframe(
+        self,
+        df: pd.DataFrame,
+    ) -> List[AccidentEvent]:
+        """
+        Process sensor data and return confirmed accident events.
+        """
 
-    self._validate_dataframe(df)
+        self._validate_dataframe(df)
 
-    events: List[AccidentEvent] = []
+        events: List[AccidentEvent] = []
 
-    consecutive = 0
-    peak_acceleration = 0.0
-    peak_gyro = 0.0
-    event_start_index: int | None = None
-    event_confirmed = False
+        consecutive = 0
+        peak_acceleration = 0.0
+        peak_gyro = 0.0
+        event_start_index: int | None = None
+        event_confirmed = False
 
-    cooldown_remaining = 0
+        cooldown_remaining = 0
 
-    for index, row in df.iterrows():
+        for index, row in df.iterrows():
 
-        if cooldown_remaining > 0:
-            cooldown_remaining -= 1
-            continue
+            if cooldown_remaining > 0:
+                cooldown_remaining -= 1
+                continue
 
-        acceleration = abs(float(row["acceleration_g"]))
-        gyro = abs(float(row["gyro_dps"]))
+            acceleration = abs(float(row["acceleration_g"]))
+            gyro = abs(float(row["gyro_dps"]))
 
-        abnormal = (
-            acceleration >= self.config.acceleration_threshold_g
-            or gyro >= self.config.gyro_threshold_dps
-        )
-
-        if abnormal:
-
-            if event_start_index is None:
-                event_start_index = int(index)
-
-            consecutive += 1
-
-            peak_acceleration = max(
-                peak_acceleration,
-                acceleration,
+            abnormal = (
+                acceleration >= self.config.acceleration_threshold_g
+                or gyro >= self.config.gyro_threshold_dps
             )
 
-            peak_gyro = max(
-                peak_gyro,
-                gyro,
-            )
+            if abnormal:
 
-            if (
-                consecutive
-                >= self.config.confirmation_window_samples
-            ):
-                event_confirmed = True
+                if event_start_index is None:
+                    event_start_index = int(index)
 
-        else:
+                consecutive += 1
 
-            if event_confirmed and event_start_index is not None:
-
-                duration = (
-                    int(index) - event_start_index
-                )
-
-                severity = self._calculate_severity(
+                peak_acceleration = max(
                     peak_acceleration,
+                    acceleration,
+                )
+
+                peak_gyro = max(
                     peak_gyro,
+                    gyro,
                 )
 
-                events.append(
-                    AccidentEvent(
-                        timestamp=str(
-                            df.iloc[index - 1]["timestamp"]
-                        ),
-                        sample_index=int(index - 1),
-                        peak_acceleration_g=peak_acceleration,
-                        peak_gyro_dps=peak_gyro,
-                        severity=severity,
-                        duration_samples=duration,
+                if (
+                    consecutive
+                    >= self.config.confirmation_window_samples
+                ):
+                    event_confirmed = True
+
+            else:
+
+                if event_confirmed and event_start_index is not None:
+
+                    last_event_index = int(index) - 1
+
+                    duration = (
+                        last_event_index
+                        - event_start_index
+                        + 1
                     )
-                )
 
-                cooldown_remaining = (
-                    self.config.cooldown_samples
-                )
+                    severity = self._calculate_severity(
+                        peak_acceleration,
+                        peak_gyro,
+                    )
 
-            consecutive = 0
-            peak_acceleration = 0.0
-            peak_gyro = 0.0
-            event_start_index = None
-            event_confirmed = False
+                    events.append(
+                        AccidentEvent(
+                            timestamp=str(
+                                df.iloc[last_event_index]["timestamp"]
+                            ),
+                            sample_index=last_event_index,
+                            peak_acceleration_g=peak_acceleration,
+                            peak_gyro_dps=peak_gyro,
+                            severity=severity,
+                            duration_samples=duration,
+                        )
+                    )
 
-    # Handle an event that continues until the end of the dataset.
-    if event_confirmed and event_start_index is not None:
+                    cooldown_remaining = (
+                        self.config.cooldown_samples
+                    )
 
-        last_index = len(df) - 1
+                consecutive = 0
+                peak_acceleration = 0.0
+                peak_gyro = 0.0
+                event_start_index = None
+                event_confirmed = False
 
-        duration = (
-            last_index - event_start_index + 1
-        )
+        # Handle an event that continues until the end of the dataset.
+        if event_confirmed and event_start_index is not None:
 
-        severity = self._calculate_severity(
-            peak_acceleration,
-            peak_gyro,
-        )
+            last_event_index = len(df) - 1
 
-        events.append(
-            AccidentEvent(
-                timestamp=str(
-                    df.iloc[last_index]["timestamp"]
-                ),
-                sample_index=last_index,
-                peak_acceleration_g=peak_acceleration,
-                peak_gyro_dps=peak_gyro,
-                severity=severity,
-                duration_samples=duration,
+            duration = (
+                last_event_index
+                - event_start_index
+                + 1
             )
-        )
 
-    return events
+            severity = self._calculate_severity(
+                peak_acceleration,
+                peak_gyro,
+            )
+
+            events.append(
+                AccidentEvent(
+                    timestamp=str(
+                        df.iloc[last_event_index]["timestamp"]
+                    ),
+                    sample_index=last_event_index,
+                    peak_acceleration_g=peak_acceleration,
+                    peak_gyro_dps=peak_gyro,
+                    severity=severity,
+                    duration_samples=duration,
+                )
+            )
+
+        return events
 
     def _validate_dataframe(
         self,
