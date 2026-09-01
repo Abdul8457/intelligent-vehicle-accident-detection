@@ -161,3 +161,18 @@ def test_invalid_configuration_is_rejected():
         DetectionConfig(
             confirmation_window_samples=0
         )
+def test_event_tracks_peak_until_abnormal_sequence_ends():
+    df = make_df(
+        [3.2, 3.8, 4.1, 4.7, 5.0, 4.3, 0.1],
+        [190, 210, 230, 250, 280, 220, 5],
+    )
+
+    events = AccidentDetector().process_dataframe(df)
+
+    assert len(events) == 1
+
+    event = events[0]
+
+    assert event.peak_acceleration_g == 5.0
+    assert event.peak_gyro_dps == 280.0
+    assert event.duration_samples == 6
