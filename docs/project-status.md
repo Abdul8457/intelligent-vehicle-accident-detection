@@ -1,23 +1,40 @@
 # Project Status
 
-## Version 0.1 — Initial Portfolio Foundation
+## Completed Academic Project
 
-Implemented:
-- Modular Python accident detector
-- Synthetic scenario generator
-- GPS location abstraction
-- Emergency-alert message generator
+This repository presents a cleaned and testable software version of my
+2021 undergraduate academic project on vehicle accident detection and
+emergency alerts.
+
+### Implemented
+
+- Rule-based accident detection
+- Acceleration and gyroscope threshold monitoring
+- Consecutive-sample event confirmation
+- Cooldown handling
+- Peak acceleration and gyroscope tracking
+- Event duration calculation
+- Prototype severity classification
+- GPS location handling
+- Emergency-alert message generation
+- Synthetic vehicle-sensor scenarios
+- Sensor-data analysis and visualization
+- Arduino reference implementation
 - Automated unit tests
-- Sensor-data analysis and plotting
-- Arduino reference skeleton
-- Technical documentation
+- Project documentation
 
-Planned:
-- Improved signal processing
-- Sensor-fusion approach
-- More realistic labeled scenarios
-- Detection-latency evaluation
-- Precision/recall evaluation
-- Optional physical Arduino/IMU integration
-- GitHub Actions CI
-- Improved visualization/dashboard
+### Validation
+
+- 15 automated tests passing
+- 7 synthetic vehicle scenarios available
+- Normal and non-accident scenarios tested
+- Minor and major collision scenarios tested
+
+### Limitations
+
+The current implementation is an academic and portfolio demonstration.
+The sensor thresholds are prototype parameters and do not represent
+real-world crash-detection performance or safety certification.
+
+The simulator uses synthetic sensor data and the project does not
+connect to real emergency services.
